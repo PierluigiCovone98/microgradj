@@ -52,7 +52,7 @@ public class DiffScalarNode {
 
     @Override
     public String toString() {
-        return String.format("DiffScalarNode(data=%s, grad=%s)\n", data,grad);
+        return String.format("DiffScalarNode(data=%s, grad=%s)", data,grad);
     }
 
 }
