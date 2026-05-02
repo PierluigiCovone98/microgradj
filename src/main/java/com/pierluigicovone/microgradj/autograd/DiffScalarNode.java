@@ -6,10 +6,10 @@ package com.pierluigicovone.microgradj.autograd;
  * Wraps a scalar value and tracks the operation that produced it,
  * along with references to its parent nodes in the computation graph.
  *
- * Each node knows how to propagate its gradient backward to its parents,
- * enabling reverse-mode automatic differentiation.
+ * Each node id differentiable and knows how to propagate its gradient
+ * backward to its parents, enabling reverse-mode automatic differentiation.
  */
-public class DifferentiableScalarNode {
+public class DiffScalarNode {
 
     // --- FIELDS ---
     private final double data;      // <Is it really final???>
@@ -21,7 +21,7 @@ public class DifferentiableScalarNode {
     /**
      * Takes as parameter in input the scalar value "data" (temporarily...).
      */
-    public DifferentiableScalarNode(double data) {
+    public DiffScalarNode(double data) {
         // initialize fields
         this.data = data;
     }
@@ -48,13 +48,11 @@ public class DifferentiableScalarNode {
     }
 
 
-
-
     // --- OVERRIDES ---
 
     @Override
     public String toString() {
-        return String.format("DifferentiableScalarNode(data=%s, grad=%s)\n", data,grad);
+        return String.format("DiffScalarNode(data=%s, grad=%s)\n", data,grad);
     }
 
 }
