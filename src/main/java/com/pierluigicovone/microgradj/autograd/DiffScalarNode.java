@@ -1,6 +1,8 @@
 package com.pierluigicovone.microgradj.autograd;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.List;
 
 /**
  * Building Block of the automatic differentiation engine.
@@ -8,7 +10,7 @@ import java.util.Objects;
  * Wraps a scalar value and tracks the operation that produced it,
  * along with references to its parent nodes in the computation graph.
  *
- * Each node id differentiable and knows how to propagate its gradient
+ * Each node is differentiable and knows how to propagate its gradient
  * backward to its parents, enabling reverse-mode automatic differentiation.
  */
 public class DiffScalarNode {
@@ -17,31 +19,38 @@ public class DiffScalarNode {
     private final double data;      // <Is it really final???>
     private double grad;
 
-    private final String operation;     // The op. that produced this node.
-
-
-
+    // --- Graph Construction ---
+    private final Set<DiffScalarNode> parents;      // Set is useful to walk through the graph
+    private final String operation;                 // The op. that produced this node.
 
 
     // ----- METHODS -----
 
     /**
-     * Constructor takes as parameter in input the scalar value "data"
-     * and set the "operation" field as the default value of "".
+     * Private constructor that initialize fields.
      */
-    public DiffScalarNode(double data) {
+    private DiffScalarNode(double data, Set<DiffScalarNode> parents, String operation) {
         this.data = data;
-        this.operation = "";
+
+        this.parents = Objects.requireNonNull(parents);
+        this.operation = operation;
+
     }
 
     /**
-     * Constructor takes as parameter in input the scalar value "data" and the operation type.
+     * Factory method to create leafs (that are nodes created by users).
      */
-    public DiffScalarNode(double data, String operation) {
+    public static DiffScalarNode leaf(double data) {
+        // A leaf has parents neither operations from which it is created.
+        return new DiffScalarNode( data, Set.of(), "");
+    }
 
-        this.data = data;
-        this.operation = operation;
-
+    /**
+     * (Private) Factory method to create nodes from operations.
+     * This method is static because of coherence with the public "leaf" method.
+     */
+    private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents, String operation) {
+        return new DiffScalarNode( data, parents, operation);
     }
 
 
@@ -52,7 +61,10 @@ public class DiffScalarNode {
      * This method is the equivalent of:    a + b.
      */
     public DiffScalarNode add(DiffScalarNode other) {
-        return sum(data, other.data);
+        return add( data,
+                other.data,
+                Set.copyOf( List.of(this, other) )
+        );
     }
 
     /**
@@ -60,23 +72,31 @@ public class DiffScalarNode {
      * where "constant" is any instance of number.
      */
     public DiffScalarNode add(Number other) {
-        return sum(data, other.doubleValue());
+        return add(data,
+                other.doubleValue(),
+                Set.of( this )
+        );
     }
 
     /**
      * Avoid the repetition of using "+" in both public "sum" methods.
      */
-    private DiffScalarNode sum(double thisData, double otherData) {
-        return new DiffScalarNode(thisData + otherData, "+");
-    }
+    private DiffScalarNode add(double thisData, double otherData, Set<DiffScalarNode> parents) {
 
+        return DiffScalarNode.fromOperation(thisData + otherData, parents, "+");
+
+    }
 
     /**
      * Assuming two instances of the DiffScalarNode class, a and b;
      * This method is the equivalent of:    a - b.
      */
     public DiffScalarNode sub(DiffScalarNode other) {
-        return sub(data, other.data);
+
+        return sub( data,
+                other.data,
+                Set.copyOf( List.of(this, other) )
+        );
     }
 
     /**
@@ -84,14 +104,18 @@ public class DiffScalarNode {
      * where "constant" is any instance of number.
      */
     public DiffScalarNode sub(Number other) {
-        return sub(data, other.doubleValue());
+
+        return sub(data,
+                other.doubleValue(),
+                Set.of( this )
+        );
     }
 
     /**
      * Avoid the repetition of using "-" in both public "sum" methods.
      */
-    private DiffScalarNode sub(double thisData, double otherData) {
-        return new DiffScalarNode(thisData + otherData, "-");
+    private DiffScalarNode sub(double thisData, double otherData, Set<DiffScalarNode> parents) {
+        return DiffScalarNode.fromOperation(thisData - otherData, parents, "-");
     }
 
 
@@ -125,6 +149,13 @@ public class DiffScalarNode {
         return operation;
     }
 
+    /**
+     * Get parents.
+     */
+    public Set<DiffScalarNode> getParents() {
+        return parents;
+    }
+
 
     // --- Overrides ---
 
@@ -132,28 +163,6 @@ public class DiffScalarNode {
     public String toString() {
         return String.format("DiffScalarNode(data=%s, grad=%s, op=%s)",
                 data,grad, operation.isEmpty() ? "leaf" : operation );
-    }
-
-    @Override
-    public boolean equals(Object o) {
-
-        // This method should be updated each time a new field is inserted.
-
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-
-        DiffScalarNode object = (DiffScalarNode) o;
-
-        // We can use the "==" operator because they're double values.
-        return data == object.data
-                && grad == object.grad;
-     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(data, grad);
     }
 
 }

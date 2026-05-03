@@ -2,6 +2,8 @@ package com.pierluigicovone.microgradj.examples;
 
 import com.pierluigicovone.microgradj.autograd.DiffScalarNode;
 
+import java.util.Set;
+
 /**
  * Testing some functions of the "DifferentiableScalarNode" class,
  * while building it.
@@ -11,8 +13,8 @@ public class Test {
     public static void main(String[] args) {
 
         // --- 1. Testing the "toString()" method... --- OK
-        DiffScalarNode a = new DiffScalarNode(5.0);
-        DiffScalarNode b = new DiffScalarNode(10.0);
+        DiffScalarNode a =  DiffScalarNode.leaf(5.0);
+        DiffScalarNode b = DiffScalarNode.leaf(10.0);
 
         System.out.println(a);
         System.out.println(b);
