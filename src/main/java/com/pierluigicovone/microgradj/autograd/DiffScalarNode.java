@@ -13,37 +13,61 @@ import java.util.Objects;
  */
 public class DiffScalarNode {
 
-    // --- FIELDS ---
+    // ----- FIELDS -----
     private final double data;      // <Is it really final???>
     private double grad;
 
+    private final String operation;     // The op. that produced this node.
 
-    // --- METHODS ---
+
+
+
+
+    // ----- METHODS -----
 
     /**
-     * Takes as parameter in input the scalar value "data" (temporarily...).
+     * Constructor takes as parameter in input the scalar value "data"
+     * and set the "operation" field as the default value of "".
      */
     public DiffScalarNode(double data) {
-        // initialize fields
         this.data = data;
+        this.operation = "";
     }
+
+    /**
+     * Constructor takes as parameter in input the scalar value "data" and the operation type.
+     */
+    public DiffScalarNode(double data, String operation) {
+
+        this.data = data;
+        this.operation = operation;
+
+    }
+
+
+    // --- Operations ---
 
     /**
      * Assuming two instances of the DiffScalarNode class, a and b;
      * This method is the equivalent of:    a + b.
      */
     public DiffScalarNode add(DiffScalarNode other) {
-        return new DiffScalarNode(data + other.data);
+        return sum(data, other.data);
     }
 
     /**
-     * Assuming an instance "a" of the DiffScalarNode class.
-     * This method is the equivalent of:
-     *                  a + constant,
+     * This method is the equivalent of:        a + constant,
      * where "constant" is any instance of number.
      */
     public DiffScalarNode add(Number other) {
-        return new DiffScalarNode(data + other.doubleValue());
+        return sum(data, other.doubleValue());
+    }
+
+    /**
+     * Avoid the repetition of using "+" in both public "sum" methods.
+     */
+    private DiffScalarNode sum(double thisData, double otherData) {
+        return new DiffScalarNode(thisData + otherData, "+");
     }
 
 
@@ -52,20 +76,26 @@ public class DiffScalarNode {
      * This method is the equivalent of:    a - b.
      */
     public DiffScalarNode sub(DiffScalarNode other) {
-        return new DiffScalarNode(data - other.data);
+        return sub(data, other.data);
     }
 
     /**
-     * Assuming an instance "a" of the DiffScalarNode class.
-     * This method is the equivalent of:
-     *                  a - constant,
+     * This method is the equivalent of:        a - constant,
      * where "constant" is any instance of number.
      */
     public DiffScalarNode sub(Number other) {
-        return new DiffScalarNode(data - other.doubleValue());
+        return sub(data, other.doubleValue());
+    }
+
+    /**
+     * Avoid the repetition of using "-" in both public "sum" methods.
+     */
+    private DiffScalarNode sub(double thisData, double otherData) {
+        return new DiffScalarNode(thisData + otherData, "-");
     }
 
 
+    // --- Getters & Setters ---
 
     /**
      * Get the "data" value.
@@ -88,14 +118,20 @@ public class DiffScalarNode {
         this.grad = grad;
     }
 
+    /**
+     * Get the "operation".
+     */
+    public String getOperation() {
+        return operation;
+    }
 
 
-
-    // --- OVERRIDES ---
+    // --- Overrides ---
 
     @Override
     public String toString() {
-        return String.format("DiffScalarNode(data=%s, grad=%s)", data,grad);
+        return String.format("DiffScalarNode(data=%s, grad=%s, op=%s)",
+                data,grad, operation.isEmpty() ? "leaf" : operation );
     }
 
     @Override

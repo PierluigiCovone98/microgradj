@@ -10,14 +10,14 @@ public class Test {
 
     public static void main(String[] args) {
 
-        // 1. Testing the "toString()" method... OK.
+        // --- 1. Testing the "toString()" method... --- OK
         DiffScalarNode a = new DiffScalarNode(5.0);
         DiffScalarNode b = new DiffScalarNode(10.0);
 
         System.out.println(a);
         System.out.println(b);
 
-        // 2. Let's try:
+        // --- 2. Let's try: --- OK
         //   2.1. "+"
         DiffScalarNode c1 = a.add(b);       // a+b
         DiffScalarNode c2 = b.add(a);       // b+a
@@ -47,7 +47,11 @@ public class Test {
         System.out.println( f1 );
         System.out.println( f2 );
 
+
+        // --- 3. [...] ----
+
     }
+
 
 
 }
