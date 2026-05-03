@@ -4,6 +4,7 @@ import com.pierluigicovone.microgradj.autograd.DiffScalarNode;
 import com.pierluigicovone.microgradj.viz.GraphRenderer;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Testing a simple math expression using "DiffScalarNodes".
@@ -22,6 +23,9 @@ public class Test2 {
      * Entry point for the application.
      */
     public static void main(String[] args) throws IOException {
+
+        // To pretty format numbers.
+        Locale.setDefault(Locale.US);
 
         // Define all nodes
         DiffScalarNode a = DiffScalarNode.leaf(2.0);        // a
