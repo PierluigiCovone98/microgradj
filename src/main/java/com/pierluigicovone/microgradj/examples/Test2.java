@@ -28,35 +28,22 @@ public class Test2 {
         Locale.setDefault(Locale.US);
 
         // Define all nodes
-        DiffScalarNode a = DiffScalarNode.leaf(2.0);        // a
-        DiffScalarNode b = DiffScalarNode.leaf(-3.0);       // b
-        DiffScalarNode d = a.add(b);                            // d = a + b
+        DiffScalarNode a = DiffScalarNode.leaf(2.0);
+        DiffScalarNode b = DiffScalarNode.leaf(-3.0);
+        DiffScalarNode c = DiffScalarNode.leaf(5.0);
 
-        DiffScalarNode c = DiffScalarNode.leaf(5.0);       // c
-        DiffScalarNode e = c.add(2.0);                          // e = c + 2.0
+        DiffScalarNode L = a.add(b).sub(c.add(2.0));
 
-        DiffScalarNode L = d.sub(e);   // L = d + e = ( a + b ) - ( c + 2.0)
+        System.out.println("Test 2 — L = (a + b) - (c + 2.0)");
+        System.out.printf("  a = %.2f   b = %.2f   c = %.2f%n",
+                a.getData(), b.getData(), c.getData());
+        System.out.printf("  L = %.4f%n", L.getData());
 
-        System.out.println("==========================================");
-        System.out.println("  TEST 2: Graph Visualization");
-        System.out.println("  Equation: L = (a + b) - (c + 2.0)");
-        System.out.println("==========================================");
-        System.out.println();
-        System.out.println("Inputs:");
-        System.out.printf("  a = %.4f%n", a.getData());
-        System.out.printf("  b = %.4f%n", b.getData());
-        System.out.printf("  c = %.4f%n", c.getData());
-        System.out.println();
-        System.out.println("Intermediate results:");
-        System.out.printf("  d = a + b   = %.4f%n", d.getData());
-        System.out.printf("  e = c + 2.0 = %.4f%n", e.getData());
-        System.out.println();
-        System.out.printf("Final result: L = %.4f%n", L.getData());
-        System.out.println();
+        GraphRenderer.renderToFile(L, "graph.png");
+        System.out.println("  → graph.png");
 
         GraphRenderer.renderToFile(L, "graph.png");
         System.out.println("Graph rendered to: graph.png");
-        System.out.println("==========================================");
     }
 
 }
