@@ -54,11 +54,14 @@ public class DiffScalarNode {
     }
 
 
-    // --- Operations ---
+    // --- Atomic Operations ---
+    //   a + b      (and: a + c)
+    //   a * b      (and: a * c)
+    //   a^c        (with c constant)
 
+    // --- Addition
     /**
-     * Assuming two instances of the DiffScalarNode class, a and b;
-     * This method is the equivalent of:    a + b.
+     * Add two "DiffScalarNode" instances.
      */
     public DiffScalarNode add(DiffScalarNode other) {
         return add( data,
@@ -68,8 +71,7 @@ public class DiffScalarNode {
     }
 
     /**
-     * This method is the equivalent of:        a + constant,
-     * where "constant" is any instance of number.
+     * Add a "DiffScalarNode" instance with a scalar.
      */
     public DiffScalarNode add(Number other) {
         return add(data,
@@ -79,45 +81,92 @@ public class DiffScalarNode {
     }
 
     /**
-     * Avoid the repetition of using "+" in both public "sum" methods.
+     * Avoid the repetition of using "+" in both public "add" methods.
      */
     private DiffScalarNode add(double thisData, double otherData, Set<DiffScalarNode> parents) {
-
         return DiffScalarNode.fromOperation(thisData + otherData, parents, "+");
-
     }
 
+    // --- Multiplication
     /**
-     * Assuming two instances of the DiffScalarNode class, a and b;
-     * This method is the equivalent of:    a - b.
+     * Multiply two "DiffScalarNode" instances.
      */
-    public DiffScalarNode sub(DiffScalarNode other) {
-
-        return sub( data,
+    public DiffScalarNode mul(DiffScalarNode other) {
+        return mul(data,
                 other.data,
                 Set.copyOf( List.of(this, other) )
         );
     }
 
     /**
-     * This method is the equivalent of:        a - constant,
-     * where "constant" is any instance of number.
+     * Multiply a "DiffScalarNode" instance with a scalar.
      */
-    public DiffScalarNode sub(Number other) {
-
-        return sub(data,
+    public DiffScalarNode mul(Number other) {
+        return mul( data,
                 other.doubleValue(),
-                Set.of( this )
+                Set.of(this)
         );
     }
 
     /**
-     * Avoid the repetition of using "-" in both public "sum" methods.
+     * Avoid the repetition of the "*" in both "mul" operations.
      */
-    private DiffScalarNode sub(double thisData, double otherData, Set<DiffScalarNode> parents) {
-        return DiffScalarNode.fromOperation(thisData - otherData, parents, "-");
+    private DiffScalarNode mul(double thisData, double otherData, Set<DiffScalarNode> parents) {
+        return DiffScalarNode.fromOperation(thisData * otherData, parents, "*" );
     }
 
+    // --- Exponential
+    /**
+     * Exponentiation given a constant.
+     */
+    public DiffScalarNode pow (Number other) {
+        return DiffScalarNode.fromOperation(
+                Math.pow(data, other.doubleValue()),
+                Set.of(this),
+                "^"
+        );
+    }
+
+
+    // --- Derived Operations ----
+
+    // --- Negative
+    public DiffScalarNode neg() {
+        return this.mul(-1);
+    }
+
+    // --- Subtraction
+    /**
+     * Subtract two "DiffScalarNode" instances.
+     */
+    public DiffScalarNode sub(DiffScalarNode other) {
+        return this.add( other.neg() );
+    }
+
+    /**
+     * Subtract a "DiffScalarNode" instance by a scalar.
+     */
+    public DiffScalarNode sub(Number other) {
+        return this.add( -other.doubleValue() );
+    }
+
+    // --- Division
+    /**
+     * Divide two "DiffScalarNode" instances.
+     */
+    public DiffScalarNode div(DiffScalarNode other) {
+        return this.mul( other.pow(-1) );
+    }
+
+    /**
+     * Divide a "DiffScalarNode" instance by a scalar.
+     */
+    public DiffScalarNode div(Number other) {
+        //      DiffScalarValue / number
+        //      DiffScalarValue * number^(-1)
+        //      DiffScalarValue * 1/number
+        return this.mul( 1/other.doubleValue() );
+    }
 
     // --- Getters & Setters ---
 
