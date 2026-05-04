@@ -1,4 +1,4 @@
-# micrograd-java
+# microgradj
 
 A Java reimplementation of [Andrej Karpathy's micrograd](https://github.com/karpathy/micrograd), built for educational purposes while following the *Neural Networks: from Zero to Hero* video series.
 
