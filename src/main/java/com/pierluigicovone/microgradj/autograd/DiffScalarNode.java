@@ -1,5 +1,6 @@
 package com.pierluigicovone.microgradj.autograd;
 
+import java.security.DigestException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.List;
@@ -23,17 +24,23 @@ public class DiffScalarNode {
     private final Set<DiffScalarNode> parents;      // Set is useful to walk through the graph
     private final String operation;                 // The op. that produced this node.
 
+    // --- Visualization Fields
+    private final Double constant;              // Operations with constants.
+    // private final String variableName;
 
     // ----- METHODS -----
 
     /**
      * Private constructor that initialize fields.
      */
-    private DiffScalarNode(double data, Set<DiffScalarNode> parents, String operation) {
+    private DiffScalarNode(double data, Set<DiffScalarNode> parents, String operation, Double constant) {
         this.data = data;
 
         this.parents = Objects.requireNonNull(parents);
         this.operation = operation;
+
+        // This is non-null iif the related operation involved a constant.
+        this.constant = constant;
 
     }
 
@@ -42,15 +49,16 @@ public class DiffScalarNode {
      */
     public static DiffScalarNode leaf(double data) {
         // A leaf has parents neither operations from which it is created.
-        return new DiffScalarNode( data, Set.of(), "");
+        return new DiffScalarNode( data, Set.of(), "", null);
     }
 
     /**
-     * (Private) Factory method to create nodes from operations.
+     * Factory method to create nodes from operations between two "DiffScalarNode" instances,
+     * or between a "DiffScalarNode" instance and a scalar.
      * This method is static because of coherence with the public "leaf" method.
      */
-    private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents, String operation) {
-        return new DiffScalarNode( data, parents, operation);
+    private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents, String operation, Double constant) {
+        return new DiffScalarNode( data, parents, operation, constant);
     }
 
 
@@ -66,7 +74,8 @@ public class DiffScalarNode {
     public DiffScalarNode add(DiffScalarNode other) {
         return add( data,
                 other.data,
-                Set.copyOf( List.of(this, other) )
+                Set.copyOf( List.of(this, other) ),
+                null
         );
     }
 
@@ -74,17 +83,21 @@ public class DiffScalarNode {
      * Add a "DiffScalarNode" instance with a scalar.
      */
     public DiffScalarNode add(Number other) {
+        double otherData = other.doubleValue();
+
         return add(data,
-                other.doubleValue(),
-                Set.of( this )
+                otherData,
+                Set.of( this ),
+                otherData
         );
     }
 
     /**
      * Avoid the repetition of using "+" in both public "add" methods.
      */
-    private DiffScalarNode add(double thisData, double otherData, Set<DiffScalarNode> parents) {
-        return DiffScalarNode.fromOperation(thisData + otherData, parents, "+");
+    private DiffScalarNode add(double thisData, double otherData, Set<DiffScalarNode> parents, Double constant) {
+       return DiffScalarNode.fromOperation(thisData + otherData, parents, "+", constant);
+
     }
 
     // --- Multiplication
@@ -94,7 +107,8 @@ public class DiffScalarNode {
     public DiffScalarNode mul(DiffScalarNode other) {
         return mul(data,
                 other.data,
-                Set.copyOf( List.of(this, other) )
+                Set.copyOf( List.of(this, other) ),
+                null
         );
     }
 
@@ -102,17 +116,20 @@ public class DiffScalarNode {
      * Multiply a "DiffScalarNode" instance with a scalar.
      */
     public DiffScalarNode mul(Number other) {
+        double otherData = other.doubleValue();
+
         return mul( data,
-                other.doubleValue(),
-                Set.of(this)
+                otherData,
+                Set.of(this),
+                otherData
         );
     }
 
     /**
      * Avoid the repetition of the "*" in both "mul" operations.
      */
-    private DiffScalarNode mul(double thisData, double otherData, Set<DiffScalarNode> parents) {
-        return DiffScalarNode.fromOperation(thisData * otherData, parents, "*" );
+    private DiffScalarNode mul(double thisData, double otherData, Set<DiffScalarNode> parents, Double constant) {
+        return DiffScalarNode.fromOperation(thisData * otherData, parents, "*" , constant);
     }
 
     // --- Exponential
@@ -120,10 +137,13 @@ public class DiffScalarNode {
      * Exponentiation given a constant.
      */
     public DiffScalarNode pow (Number other) {
+        double otherData = other.doubleValue();
+
         return DiffScalarNode.fromOperation(
-                Math.pow(data, other.doubleValue()),
+                Math.pow(data, otherData),
                 Set.of(this),
-                "^"
+                "^",
+                otherData
         );
     }
 
@@ -147,6 +167,7 @@ public class DiffScalarNode {
      * Subtract a "DiffScalarNode" instance by a scalar.
      */
     public DiffScalarNode sub(Number other) {
+        // Redundant conversion to double of "other".
         return this.add( -other.doubleValue() );
     }
 
@@ -203,6 +224,20 @@ public class DiffScalarNode {
      */
     public Set<DiffScalarNode> getParents() {
         return parents;
+    }
+
+    /**
+     * Get constant.
+     */
+    public Double getConstant() {
+        return constant;
+    }
+
+    /**
+     * Check if is there a constant.
+     */
+    public boolean hasConstant() {
+        return constant != null;
     }
 
 

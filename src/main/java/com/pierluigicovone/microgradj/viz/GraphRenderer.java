@@ -58,7 +58,7 @@ public final class GraphRenderer {
             g.add(valueBox);
         }
 
-        // Pass 2: operation circles + edges
+        // Pass 2: for each non-leaf node, create the "operation circle"
         for (DiffScalarNode n : nodes) {
             if (n.getParents().isEmpty()) continue;
 
@@ -68,9 +68,23 @@ public final class GraphRenderer {
                     .add(Label.of(n.getOperation()));
             g.add(opCircle);
 
+            // Parents → op
             for (DiffScalarNode parent : n.getParents()) {
                 valueNodes.get(parent).addLink(opCircle);
             }
+
+            // If there's a constant, render it as a small node and link it too
+            if (n.hasConstant()) {
+                String constId = "const_" + System.identityHashCode(n);
+                MutableNode constNode = Factory.mutNode(constId)
+                        .add(Shape.ELLIPSE)
+                        .add(Font.size(10))
+                        .add(Label.of(String.format(Locale.US, "%.4f", n.getConstant())));
+                g.add(constNode);
+                constNode.addLink(opCircle);
+            }
+
+            // Op → this value
             opCircle.addLink(valueNodes.get(n));
         }
 
