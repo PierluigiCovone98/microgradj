@@ -96,10 +96,13 @@ public final class GraphRenderer {
      * Format: "{ data = 2.0000 | grad = 0.0000 }".
      */
     private static String formatValueRecord(DiffScalarNode n) {
-        return String.format(
-                Locale.US,
-                "{ data = %.4f | grad = %.4f }",
-                n.getData(), n.getGrad()
-        );
+        String dataCell = String.format(Locale.US, "data %.4f", n.getData());
+        String gradCell = String.format(Locale.US, "grad %.4f", n.getGrad());
+
+        if (n.getVariableName().isEmpty()) {
+            return String.format("{ %s | %s }", dataCell, gradCell);
+        } else {
+            return String.format("{ %s | %s | %s }", n.getVariableName(), dataCell, gradCell);
+        }
     }
 }

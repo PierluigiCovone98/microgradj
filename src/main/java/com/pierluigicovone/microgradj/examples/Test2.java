@@ -28,11 +28,16 @@ public class Test2 {
         Locale.setDefault(Locale.US);
 
         // Define all nodes
-        DiffScalarNode a = DiffScalarNode.leaf(2.0);
-        DiffScalarNode b = DiffScalarNode.leaf(-3.0);
-        DiffScalarNode c = DiffScalarNode.leaf(5.0);
+        DiffScalarNode a = DiffScalarNode.leaf(2.0, "a");
+        DiffScalarNode b = DiffScalarNode.leaf(-3.0, "b");
+        DiffScalarNode c = DiffScalarNode.leaf(5.0, "c");
 
-        DiffScalarNode L = a.add(b).sub(c.add(2.0));
+
+        DiffScalarNode d = a.add(b).withName("d");
+        DiffScalarNode e = c.add(2.0).withName("e");
+        DiffScalarNode f  = e.neg().withName("f");
+
+        DiffScalarNode L = d.add(f).withName("L");
 
         System.out.println("Test 2 — L = (a + b) - (c + 2.0)");
         System.out.printf("  a = %.2f   b = %.2f   c = %.2f%n",

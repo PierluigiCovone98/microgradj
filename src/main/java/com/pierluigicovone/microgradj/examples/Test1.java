@@ -11,8 +11,8 @@ public class Test1 {
     public static void main(String[] args) {
 
         // --- 1. Testing the "toString()" method... --- OK
-        DiffScalarNode a =  DiffScalarNode.leaf(5.0);
-        DiffScalarNode b = DiffScalarNode.leaf(10.0);
+        DiffScalarNode a =  DiffScalarNode.leaf(5.0, "a");
+        DiffScalarNode b = DiffScalarNode.leaf(10.0, "b");
 
         System.out.println(a);
         System.out.println(b);

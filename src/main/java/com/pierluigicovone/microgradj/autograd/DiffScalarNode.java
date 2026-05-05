@@ -26,14 +26,14 @@ public class DiffScalarNode {
 
     // --- Visualization Fields
     private final Double constant;              // Operations with constants.
-    // private final String variableName;
+    private final String variableName;          // To pretty format leafs, in the graph viz.
 
     // ----- METHODS -----
 
     /**
      * Private constructor that initialize fields.
      */
-    private DiffScalarNode(double data, Set<DiffScalarNode> parents, String operation, Double constant) {
+    private DiffScalarNode(double data, Set<DiffScalarNode> parents, String operation, Double constant, String variableName) {
         this.data = data;
 
         this.parents = Objects.requireNonNull(parents);
@@ -42,14 +42,15 @@ public class DiffScalarNode {
         // This is non-null iif the related operation involved a constant.
         this.constant = constant;
 
+        this.variableName = variableName;
     }
 
     /**
      * Factory method to create leafs (that are nodes created by users).
      */
-    public static DiffScalarNode leaf(double data) {
+    public static DiffScalarNode leaf(double data, String variableName) {
         // A leaf has parents neither operations from which it is created.
-        return new DiffScalarNode( data, Set.of(), "", null);
+        return new DiffScalarNode( data, Set.of(), "", null, variableName);
     }
 
     /**
@@ -58,7 +59,7 @@ public class DiffScalarNode {
      * This method is static because of coherence with the public "leaf" method.
      */
     private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents, String operation, Double constant) {
-        return new DiffScalarNode( data, parents, operation, constant);
+        return new DiffScalarNode( data, parents, operation, constant, "");
     }
 
 
@@ -240,6 +241,20 @@ public class DiffScalarNode {
         return constant != null;
     }
 
+    /**
+     * Get the variable name.
+     */
+    public String getVariableName() {
+        return variableName;
+    }
+
+    /**
+     * Creates a kind of "copy" of the instance on which the method is invoked, my mpdeify the name.
+     * (It differs a little from the previous style).
+     */
+    public DiffScalarNode withName(String name) {
+        return new DiffScalarNode(this.data, this.parents, this.operation, this.constant, name);
+    }
 
     // --- Overrides ---
 
