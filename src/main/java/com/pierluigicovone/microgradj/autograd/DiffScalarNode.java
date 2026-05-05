@@ -1,6 +1,5 @@
 package com.pierluigicovone.microgradj.autograd;
 
-import java.security.DigestException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.List;
@@ -17,8 +16,10 @@ import java.util.List;
 public class DiffScalarNode {
 
     // ----- FIELDS -----
-    private final double data;      // <Is it really final???>
+    private final double data;
     private double grad;
+
+    private BackwardOp backwardOp;
 
     // --- Graph Construction ---
     private final Set<DiffScalarNode> parents;      // Set is useful to walk through the graph
@@ -26,7 +27,8 @@ public class DiffScalarNode {
 
     // --- Visualization Fields
     private final Double constant;              // Operations with constants.
-    private final String variableName;          // To pretty format leafs, in the graph viz.
+    private String variableName;                // To pretty format leafs, in the graph viz.
+
 
     // ----- METHODS -----
 
@@ -43,13 +45,14 @@ public class DiffScalarNode {
         this.constant = constant;
 
         this.variableName = variableName;
+
+        this.backwardOp = BackwardOp.NO_OP;       // By default, do nothing;
     }
 
     /**
      * Factory method to create leafs (that are nodes created by users).
      */
     public static DiffScalarNode leaf(double data, String variableName) {
-        // A leaf has parents neither operations from which it is created.
         return new DiffScalarNode( data, Set.of(), "", null, variableName);
     }
 
@@ -58,7 +61,9 @@ public class DiffScalarNode {
      * or between a "DiffScalarNode" instance and a scalar.
      * This method is static because of coherence with the public "leaf" method.
      */
-    private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents, String operation, Double constant) {
+    private static DiffScalarNode fromOperation(double data, Set<DiffScalarNode> parents,
+                                                String operation,
+                                                Double constant) {
         return new DiffScalarNode( data, parents, operation, constant, "");
     }
 
@@ -73,79 +78,120 @@ public class DiffScalarNode {
      * Add two "DiffScalarNode" instances.
      */
     public DiffScalarNode add(DiffScalarNode other) {
-        return add( data,
-                other.data,
+
+        // First create the "output" node
+        DiffScalarNode out = DiffScalarNode.fromOperation(
+                data + other.data,
                 Set.copyOf( List.of(this, other) ),
-                null
-        );
+                "+",
+                null);
+
+        // Then define the backpropagation function.
+        BackwardOp op = () -> {
+                this.grad += out.grad;
+                other.grad += out.grad;
+        };
+
+        // Modify the default behaviour.
+        out.backwardOp = op;
+
+        return out;
     }
 
     /**
      * Add a "DiffScalarNode" instance with a scalar.
      */
     public DiffScalarNode add(Number other) {
+
+        // Taking the double value
         double otherData = other.doubleValue();
 
-        return add(data,
-                otherData,
-                Set.of( this ),
-                otherData
-        );
+        // Creating the output node
+        DiffScalarNode out = DiffScalarNode.fromOperation(data + otherData, Set.of( this ), "+", otherData);
+
+        // Define the backpropagation function.
+        BackwardOp op = () -> {
+            this.grad += out.grad;
+        };
+
+        // Modify the default behaviour.
+        out.backwardOp = op;
+
+        return out;
     }
 
-    /**
-     * Avoid the repetition of using "+" in both public "add" methods.
-     */
-    private DiffScalarNode add(double thisData, double otherData, Set<DiffScalarNode> parents, Double constant) {
-       return DiffScalarNode.fromOperation(thisData + otherData, parents, "+", constant);
-
-    }
 
     // --- Multiplication
     /**
      * Multiply two "DiffScalarNode" instances.
      */
     public DiffScalarNode mul(DiffScalarNode other) {
-        return mul(data,
-                other.data,
-                Set.copyOf( List.of(this, other) ),
-                null
-        );
+
+        DiffScalarNode out = DiffScalarNode.fromOperation(
+                data * other.data,
+                Set.copyOf( List.of( this, other ) ),
+                "*" ,
+                null);
+
+        // Define the backpropagation function.
+        BackwardOp op = () -> {
+            this.grad += other.data * out.grad;
+            other.grad += this.data * out.grad;
+        };
+
+        // Modify the default behaviour.
+        out.backwardOp = op;
+
+        return out;
     }
 
     /**
      * Multiply a "DiffScalarNode" instance with a scalar.
      */
     public DiffScalarNode mul(Number other) {
+
+        // Using the double value
         double otherData = other.doubleValue();
 
-        return mul( data,
-                otherData,
-                Set.of(this),
-                otherData
-        );
+        DiffScalarNode out = DiffScalarNode.fromOperation(data * otherData, Set.of( this ) , "*" , otherData);
+
+        // Define the backpropagation function.
+        BackwardOp op = () -> {
+            this.grad += otherData * out.grad;
+        };
+
+        // Modify the default behaviour.
+        out.backwardOp = op;
+
+        return out;
     }
 
-    /**
-     * Avoid the repetition of the "*" in both "mul" operations.
-     */
-    private DiffScalarNode mul(double thisData, double otherData, Set<DiffScalarNode> parents, Double constant) {
-        return DiffScalarNode.fromOperation(thisData * otherData, parents, "*" , constant);
-    }
+
 
     // --- Exponential
     /**
      * Exponentiation given a constant.
      */
     public DiffScalarNode pow (Number other) {
+
         double otherData = other.doubleValue();
 
-        return DiffScalarNode.fromOperation(
+        DiffScalarNode out =  DiffScalarNode.fromOperation(
                 Math.pow(data, otherData),
                 Set.of(this),
                 "^",
                 otherData
         );
+
+        // Define the backpropagation function.
+        BackwardOp op = () -> {
+            this.grad +=  ( otherData * Math.pow(data, otherData-1) ) * out.grad ;
+        };
+
+        // Modify the default behaviour.
+        out.backwardOp = op;
+
+        return out;
     }
 
 
@@ -249,11 +295,11 @@ public class DiffScalarNode {
     }
 
     /**
-     * Creates a kind of "copy" of the instance on which the method is invoked, my mpdeify the name.
-     * (It differs a little from the previous style).
+     * Modify the name of the node on which is invoked.
      */
-    public DiffScalarNode withName(String name) {
-        return new DiffScalarNode(this.data, this.parents, this.operation, this.constant, name);
+    public DiffScalarNode withName(String newName) {
+        this.variableName = newName;
+        return this;  // Return the same object
     }
 
     // --- Overrides ---
