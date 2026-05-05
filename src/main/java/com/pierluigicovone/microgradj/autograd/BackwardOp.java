@@ -7,5 +7,9 @@ package com.pierluigicovone.microgradj.autograd;
  */
 @FunctionalInterface
 public interface BackwardOp {
+
+    // Empty implementation of the "BackwardOp".
+    BackwardOp NO_OP = () -> {};
+
     void propagate();
 }
