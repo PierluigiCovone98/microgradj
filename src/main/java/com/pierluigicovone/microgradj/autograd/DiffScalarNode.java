@@ -86,7 +86,56 @@ public class DiffScalarNode {
                 "+",
                 null);
 
-        // Then define the backpropagation function.
+        /*
+          Let's use an example:
+            We have that
+                (i) c = a + b,
+            and "a" and "b" are tyne nodes in a bigger graph.
+
+            Let's say that the "output node" is L;
+            and what we want is to express values
+                "a.grad" and "b.grad"
+            as derivatives respect to "L". To be more precise:
+                - a.grad = dL / da
+                - b.grad = dL / db
+
+            But as we can see, "L" is not "directly connected" to
+            both nodes (I mean: at least there is the node "c"
+            between them); so:
+                how can we express "dL / da" (or "dL / db") if
+                they are not directly connected?
+
+            Here the "chain role" is what helps us (see the definition).
+
+            Now, when we want to calculate "a.grad" and "b.grad", of course
+            we already know the value of "c.grad" (because we started to calculate
+            the gradient of nodes from the last node "L",  of our graph).
+
+            And here we are:
+                - a.grad = (dL / dc) * (dc / da)
+                - b.grad = (dL / dc) * (dc / db)
+
+            And, because from (i) we can state that
+                - (dc / da) = 1
+                - (dc / db) = 1
+            we say that:
+                - a.grad = (dL / dc) * 1
+                - b.grad = (dL / dc) * 1
+
+            With the "+" operation, the local derivative is always 1.
+            This means that:
+                - a.grad = (dL / dc)
+                - b.grad = (dL / dc)
+
+            The usage of "+=" is because we could also have
+                (ii) c = a + a;
+            In that case we have:
+                - a.grad = 2 * (dL / dc)
+            that, translated in "coding", it means:
+                - this.grad += (dL / dc)
+                - other.grad += (dL / dc)
+            where "this" and "other" are the same instance.
+         */
         BackwardOp op = () -> {
                 this.grad += out.grad;
                 other.grad += out.grad;
@@ -109,7 +158,8 @@ public class DiffScalarNode {
         // Creating the output node
         DiffScalarNode out = DiffScalarNode.fromOperation(data + otherData, Set.of( this ), "+", otherData);
 
-        // Define the backpropagation function.
+        // Define how calculate the gradient for "parent" nodes,
+        // knowing the gradient of the child "output".
         BackwardOp op = () -> {
             this.grad += out.grad;
         };
@@ -133,7 +183,48 @@ public class DiffScalarNode {
                 "*" ,
                 null);
 
-        // Define the backpropagation function.
+        /*
+          Let's use an example:
+            We have that
+                (i) c = a * b,
+            and "a" and "b" are tyne nodes in a bigger graph.
+
+            Let's say that the "output node" is L;
+            and what we want is to express values
+                "a.grad" and "b.grad"
+            as derivatives respect to "L". To be more precise:
+                - a.grad = dL / da
+                - b.grad = dL / db
+
+            But as we can see, "L" is not "directly connected" to
+            both nodes (I mean: at least there is the node "c"
+            between them); so:
+                how can we express "dL / da" (or "dL / db") if
+                they are not directly connected?
+
+            Here the "chain role" is what helps us (see the definition).
+
+            Now, when we want to calculate "a.grad" and "b.grad", of course
+            we already know the value of "c.grad" (because we started to calculate
+            the gradient of nodes from the last node "L",  of our graph).
+
+            And here we are:
+                - a.grad = (dL / dc) * (dc / da)
+                - b.grad = (dL / dc) * (dc / db)
+
+            And, because from (i) we can state that
+                - (dc / da) = b
+                - (dc / db) = a
+            we say that:
+                - a.grad = (dL / dc) * b
+                - b.grad = (dL / dc) * a
+
+            In terms of coding, we translate it as:
+                - a.grad += (dL / dc) * b.data
+                - b.grad += (dL / dc) * a.data
+
+            The usage of "+=" is the same specified for the "+" case.
+        */
         BackwardOp op = () -> {
             this.grad += other.data * out.grad;
             other.grad += this.data * out.grad;
@@ -155,7 +246,8 @@ public class DiffScalarNode {
 
         DiffScalarNode out = DiffScalarNode.fromOperation(data * otherData, Set.of( this ) , "*" , otherData);
 
-        // Define the backpropagation function.
+        // Define how calculate the gradient for "parents" node,
+        // knowing the gradient of the child "output".
         BackwardOp op = () -> {
             this.grad += otherData * out.grad;
         };
@@ -183,7 +275,8 @@ public class DiffScalarNode {
                 otherData
         );
 
-        // Define the backpropagation function.
+        // Define how calculate the gradient for "parents" node,
+        // knowing the gradient of the child "output".
         BackwardOp op = () -> {
             this.grad +=  ( otherData * Math.pow(data, otherData-1) ) * out.grad ;
         };
