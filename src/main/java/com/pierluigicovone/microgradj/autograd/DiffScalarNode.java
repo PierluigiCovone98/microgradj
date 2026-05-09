@@ -3,7 +3,6 @@ package com.pierluigicovone.microgradj.autograd;
 import java.util.Objects;
 import java.util.Set;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * Building Block of the automatic differentiation engine.
@@ -286,7 +285,6 @@ public class DiffScalarNode {
     }
 
     // --- tanh
-
     /**
      * This is a "non-atomic" implementation of the non-linear tanh function;
      * what does it mean?
@@ -341,7 +339,6 @@ public class DiffScalarNode {
     }
 
 
-
     // --- Derived Operations ----
 
     // --- Negative
@@ -383,6 +380,26 @@ public class DiffScalarNode {
         return this.mul( 1/other.doubleValue() );
     }
 
+    // --- Backpropagation ---
+
+    /**
+     * Implementation of the backpropagation algorithm.
+     * This should be called from the "last node" of the graph.
+     */
+    public void backward() {
+
+        // Set the "top-node" gradient value
+        this.grad = 1.0;
+
+        // Topological graph
+        List<DiffScalarNode> topologicalSort = ComputationGraph.topologicalSort(this);
+
+        // Backward node-by-node
+        for (int i = topologicalSort.size() - 1; i >= 0; i--) {
+            topologicalSort.get(i).backwardOp.propagate();
+        }
+    }
+
     // --- Getters & Setters ---
 
     /**
@@ -397,13 +414,6 @@ public class DiffScalarNode {
      */
     public double getGrad() {
         return grad;
-    }
-
-    /**
-     * Set the gradient.
-     */
-    public void setGrad(double grad) {
-        this.grad = grad;
     }
 
     /**

@@ -47,7 +47,8 @@ public class Test3 {
 
         DiffScalarNode n = x1w1x2w2.add(b); n.withName("n");
 
-        DiffScalarNode o = n.tanh();    // :)
+        DiffScalarNode o = n.tanh();
+        o.backward();                   // :)
 
         // Logs
         System.out.println("Test 3");
