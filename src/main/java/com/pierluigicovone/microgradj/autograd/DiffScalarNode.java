@@ -306,18 +306,8 @@ public class DiffScalarNode {
      */
     public DiffScalarNode tanh() {
 
-        // Given a certain value "x", compute "tanh(x)".
-        Function<Double, Double> computeTanh = x -> {
-
-            double e1 =  Math.exp(x);   // e^x
-            double e2 = Math.exp(-x);   // e^(-x)
-
-            // tanh := ( e^x - e^(-x) ) / ( e^x + e^(-x) )
-            return ( e1 - e2 ) / ( e1 + e2 );
-        };
-
         // Forward pass: compute "tanh( this.data )".
-        double tanhValue = computeTanh.apply( this.data );
+        double tanhValue = Math.tanh( this.data );
 
         // Create the output value.
         DiffScalarNode out = DiffScalarNode.fromOperation(
@@ -337,11 +327,11 @@ public class DiffScalarNode {
           But, terms of coding, this means that we have to set
                 this.grad = do / dn
                           = [...]
-                          = 1 - tanh(n)^2
+                          = 1 - tanh(n)^2 (* out.grad)
          */
         BackwardOp op = () -> {
-            // Here also "+" is ok.
-            this.grad +=  1 - Math.pow(tanhValue, 2);
+            // Here also "=" is ok.
+            this.grad += ( 1 - Math.pow(tanhValue, 2) ) * out.grad;
         };
 
         // Setting the "op" as the "backwardOp" field
