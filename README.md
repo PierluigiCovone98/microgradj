@@ -26,8 +26,6 @@ Implemented so far:
 
 Not yet implemented (coming next):
 
-- `tanh` activation function.
-- Backpropagation (`backward()` method).
 - Neural network primitives (`Neuron`, `Layer`, `MLP`).
 - Recurrent architectures.
 
