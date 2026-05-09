@@ -340,6 +340,9 @@ public class DiffScalarNode {
 
 
     // --- Derived Operations ----
+    // --- These operations are implemented as support for more "complicate" function.
+    // --- For example: the "tanh" function could be implemented with its atomic components
+    // --- (and this requires exponential, division, etc).
 
     // --- Negative
     public DiffScalarNode neg() {
