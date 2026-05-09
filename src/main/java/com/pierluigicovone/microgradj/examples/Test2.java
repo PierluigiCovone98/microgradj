@@ -45,9 +45,6 @@ public class Test2 {
         System.out.printf("  L = %.4f%n", L.getData());
 
         GraphRenderer.renderToFile(L, "graph.png");
-        System.out.println("  → graph.png");
-
-        GraphRenderer.renderToFile(L, "graph.png");
         System.out.println("Graph rendered to: graph.png");
     }
 
