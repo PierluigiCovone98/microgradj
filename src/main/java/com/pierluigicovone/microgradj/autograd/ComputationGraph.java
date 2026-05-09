@@ -35,6 +35,7 @@ public final class ComputationGraph {
         return result;
     }
 
+    // Depth first walk
     private static void buildTopo(DiffScalarNode node, Set<DiffScalarNode> visited, List<DiffScalarNode> result) {
 
         // Check if we've already visited the node.
