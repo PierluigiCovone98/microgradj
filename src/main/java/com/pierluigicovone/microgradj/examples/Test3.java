@@ -37,8 +37,7 @@ public class Test3 {
         DiffScalarNode w2 = DiffScalarNode.leaf(1.0, "w2");
 
         // Bias
-        DiffScalarNode b = DiffScalarNode.leaf(6.7, "b");
-
+        DiffScalarNode b = DiffScalarNode.leaf(6.8813735870195432, "b");
 
         // Compute the output
         DiffScalarNode x1w1 = x1.mul(w1); x1w1.withName("x1 * w1");
@@ -48,14 +47,13 @@ public class Test3 {
 
         DiffScalarNode n = x1w1x2w2.add(b); n.withName("n");
 
-        // DiffScalarNode o = ...
-
+        DiffScalarNode o = n.tanh();    // :)
 
         // Logs
         System.out.println("Test 3");
-        System.out.println(" n = (x1 * w1) + (x1 * w1) + b ");
+        System.out.println(" o = tanh( (x1 * w1) + (x1 * w1) + b )");
 
-        GraphRenderer.renderToFile(n, "graph.png");
+        GraphRenderer.renderToFile(o, "graph.png");
         System.out.println("Graph rendered to: graph.png");
     }
 }

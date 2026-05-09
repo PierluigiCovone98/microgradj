@@ -3,6 +3,7 @@ package com.pierluigicovone.microgradj.autograd;
 import java.util.Objects;
 import java.util.Set;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Building Block of the automatic differentiation engine.
@@ -170,7 +171,6 @@ public class DiffScalarNode {
         return out;
     }
 
-
     // --- Multiplication
     /**
      * Multiply two "DiffScalarNode" instances.
@@ -258,8 +258,6 @@ public class DiffScalarNode {
         return out;
     }
 
-
-
     // --- Exponential
     /**
      * Exponentiation given a constant.
@@ -286,6 +284,72 @@ public class DiffScalarNode {
 
         return out;
     }
+
+    // --- tanh
+
+    /**
+     * This is a "non-atomic" implementation of the non-linear tanh function;
+     * what does it mean?
+     * If we look at the "tanh" definition
+     *      tanh := ( e^x - e^(-x) ) / ( e^x + e^(-x) )
+     * we could "build" piece by piece each component.
+     * For example, we could write
+     *      tanh := ( a - b ) / ( a + b ),
+     * where
+     *      DiffScalarNode a = e^x,
+     *      DiffScalarNode b = e^(-x)
+     *
+     * But we are not interested in "how atomic the function is";
+     * what we want is that we know how to locally derive it.
+     * So: we pre-compute the value "data" using non-DiffScalarNode
+     * derived (or atomic) function.
+     */
+    public DiffScalarNode tanh() {
+
+        // Given a certain value "x", compute "tanh(x)".
+        Function<Double, Double> computeTanh = x -> {
+
+            double e1 =  Math.exp(x);   // e^x
+            double e2 = Math.exp(-x);   // e^(-x)
+
+            // tanh := ( e^x - e^(-x) ) / ( e^x + e^(-x) )
+            return ( e1 - e2 ) / ( e1 + e2 );
+        };
+
+        // Forward pass: compute "tanh( this.data )".
+        double tanhValue = computeTanh.apply( this.data );
+
+        // Create the output value.
+        DiffScalarNode out = DiffScalarNode.fromOperation(
+                tanhValue,
+                Set.of(this),
+                "tanh",
+                null
+        );
+
+        /*
+          We have:
+                o = tanh(n)
+          This means that, for "backpropagation purposes" we want to calculate
+          the derivate of "o" respect to "n";
+          this means that we want to set the value of:
+                n.grad
+          But, terms of coding, this means that we have to set
+                this.grad = do / dn
+                          = [...]
+                          = 1 - tanh(n)^2
+         */
+        BackwardOp op = () -> {
+            // Here also "+" is ok.
+            this.grad +=  1 - Math.pow(tanhValue, 2);
+        };
+
+        // Setting the "op" as the "backwardOp" field
+        out.backwardOp = op;
+
+        return out;
+    }
+
 
 
     // --- Derived Operations ----
