@@ -23,6 +23,7 @@ Implemented so far:
 - Derived operations: subtraction, division, negation.
 - Computation graph traversal (topological sort).
 - Graph visualization to PNG via [`graphviz-java`](https://github.com/nidi3/graphviz-java).
+- Neural network primitives (`Neuron`).
 
 Not yet implemented (coming next):
 
