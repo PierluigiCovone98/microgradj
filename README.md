@@ -26,7 +26,7 @@ Implemented so far:
 
 Not yet implemented (coming next):
 
-- Neural network primitives (`Neuron`, `Layer`, `MLP`).
+- Neural network primitives (`Layer`, `MLP`).
 - Recurrent architectures.
 
 ## Requirements
