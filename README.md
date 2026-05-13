@@ -62,6 +62,7 @@ If you pass a number that doesn't correspond to any test, the script lists the a
 #   Test1.java
 #   Test2.java
 #   Test3.java
+#   Test4.java
 ```
 
 ### Cleaning up
